@@ -14,7 +14,7 @@ export interface AppConfigPluginConfig {
 function getContent() {
   return `import { defineAppConfig } from 'ice';
 
-// App config, see https://v3.ice.work/docs/guide/basic/app
+// App config, see https://v3.ice.work/docs/guide/basic/app // test2023年05月30日15:18:40
 export default defineAppConfig(() => ({
   // Set your configs here.
   app: {

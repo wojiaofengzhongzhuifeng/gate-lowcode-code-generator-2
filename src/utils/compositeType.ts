@@ -18,6 +18,19 @@ import { executeFunctionStack } from './aopHelper';
 import { parseExpressionGetKeywords } from './expressionParser';
 import { isJSExpressionFn } from './common';
 
+
+const list = ['title', 'subTitle', 'describe', 'imgAlt', 'content', 'buttonName', 'subTitle2', 'contentList', 'context', 'tit', 'subtitle', 'time']
+const listFn = ['lang_string', 'lang_string_node']
+function checkStrings(arr, str) {
+  for (let i = 0; i < arr.length; i++) {
+    if (str.includes(arr[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
 interface ILegaoVariable {
   type: 'variable';
   value: string;
@@ -47,8 +60,9 @@ function generateArray(
   value: IPublicTypeCompositeArray,
   scope: IScope,
   options: CompositeValueGeneratorOptions = {},
+  key?: string
 ): string {
-  const body = value.map((v) => generateUnknownType(v, scope, options)).join(',');
+  const body = value.map((v) => generateUnknownType(v, scope, options, key)).join(',');
   return `[${body}]`;
 }
 
@@ -68,7 +82,7 @@ function generateObject(
   const body = Object.keys(value)
     .map((key) => {
       const propName = JSON.stringify(key);
-      const v = generateUnknownType(value[key], scope, options);
+      const v = generateUnknownType(value[key], scope, options, key);
       return `${propName}: ${v}`;
     })
     .join(',\n');
@@ -78,7 +92,11 @@ function generateObject(
 
 function generateString(value: string): string {
   // 有的字符串里面会有特殊字符，比如换行或引号之类的，这里我们借助 JSON 的字符串转义功能来做下转义并加上双引号
-  return JSON.stringify(value);
+  if(checkStrings(listFn, value)){
+    return value
+  } else {
+    return JSON.stringify(value);
+  }
 }
 
 function generateNumber(value: number): string {
@@ -110,6 +128,7 @@ function generateUnknownType(
   value: IPublicTypeCompositeValue,
   scope: IScope,
   options: CompositeValueGeneratorOptions = {},
+  key?: string,
 ): string {
   if (_.isUndefined(value)) {
     return 'undefined';
@@ -123,7 +142,7 @@ function generateUnknownType(
     if (options.handlers?.array) {
       return executeFunctionStack(value, scope, options.handlers.array, generateArray, options);
     }
-    return generateArray(value, scope, options);
+    return generateArray(value, scope, options, key);
   }
 
   // FIXME: 这个是临时方案
@@ -196,6 +215,17 @@ function generateUnknownType(
     if (options.handlers?.string) {
       return executeFunctionStack(value, scope, options.handlers.string, generateString, options);
     }
+
+    if (list.includes(key)) {
+      if(value?.includes("<")){
+        // 如果包含 < ，则认为是需要渲染html 节点
+        return generateString(`lang_string_node(\`${value}\`)`);
+      } else {
+        return generateString(`lang_string(\`${value}\`)`);
+      }
+
+    }
+
     return generateString(value);
   }
 
@@ -222,7 +252,8 @@ export function generateCompositeType(
   value: IPublicTypeCompositeValue,
   scope: IScope,
   options: CompositeValueGeneratorOptions = {},
+  key?: string,
 ): string {
-  const result = generateUnknownType(value, scope, options);
+  const result = generateUnknownType(value, scope, options, key);
   return result;
 }

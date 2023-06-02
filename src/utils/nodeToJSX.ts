@@ -64,7 +64,7 @@ function generateAttrValue(
   const valueStr = generateCompositeType(attrData.attrValue, scope, {
     handlers: config?.handlers,
     nodeGenerator: config?.self,
-  });
+  }, attrData.attrName);
   return [
     {
       type: PIECE_TYPE.ATTR,
