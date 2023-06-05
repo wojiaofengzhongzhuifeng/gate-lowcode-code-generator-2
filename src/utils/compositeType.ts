@@ -95,7 +95,7 @@ function generateString(value: string): string {
   if(checkStrings(listFn, value)){
     return value
   } else {
-    return JSON.stringify(value);
+  return JSON.stringify(value);
   }
 }
 
